@@ -9,16 +9,19 @@
       --primary-color: #1db446;
       --error-color: #ff4d4f;
       --bg-color: #f0f2f5;
+      --accent-color: #007aff;
     }
-    body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: env(safe-area-inset-bottom); color: #333; }
+    body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 80px; color: #333; }
     header { background: var(--primary-color); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     
     .container { padding: 12px; max-width: 500px; margin: 0 auto; }
     
-    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee; }
+    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee; position: relative; }
     
-    .card-image { width: 100%; height: 160px; object-fit: cover; background: #eee; }
-    
+    .image-container { position: relative; width: 100%; height: 180px; background: #eee; overflow: hidden; }
+    .card-image { width: 100%; height: 100%; object-fit: cover; }
+    .image-edit-overlay { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
     .card-body { padding: 16px; }
     
     .flex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
@@ -36,22 +39,45 @@
     .price-input { flex: 1; font-size: 22px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; text-align: right; font-weight: bold; color: var(--primary-color); width: 100%; }
     
     .action-group { display: flex; gap: 10px; }
-    .btn { border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 15px; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+    .btn { border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 15px; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn:active { opacity: 0.7; }
+    .btn:disabled { background: #ccc !important; cursor: not-allowed; }
     .btn-save { background: var(--primary-color); color: white; flex: 2; }
     .btn-toggle { background: #f0f0f0; color: #555; flex: 1; }
     .btn-toggle.to-off { background: #fff1f0; color: #ff4d4f; }
     .btn-toggle.to-on { background: #e6ffed; color: #1db446; }
+
+    /* FAB (Floating Action Button) */
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; z-index: 200; cursor: pointer; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; width: 90%; max-width: 450px; border-radius: 20px; max-height: 90vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { padding: 20px; border-bottom: 1px solid #eee; text-align: center; font-weight: bold; font-size: 18px; position: sticky; top: 0; background: white; z-index: 10; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 15px 20px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #555; }
+    .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+    textarea.form-control { height: 80px; resize: none; }
 
     #loading { text-align: center; padding: 100px 20px; color: #999; }
     .loading-spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--primary-color); animation: spin 1s linear infinite; margin: 0 auto 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     .error-box { background: #fff1f0; color: #ff4d4f; padding: 20px; border-radius: 12px; border: 1px solid #ffa39e; margin: 20px; text-align: center; }
+
+    .preview-area { width: 100%; height: 150px; background: #f8f8f8; border: 2px dashed #ddd; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-top: 8px; cursor: pointer; }
+    .preview-area img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-area.has-img::after { content: '画像をタップして変更'; position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.5); color: white; font-size: 11px; padding: 4px; text-align: center; }
   </style>
 </head>
 <body>
   <header>お弁当メニュー管理</header>
+  
   <div class="container" id="app">
     <div id="loading">
       <div class="loading-spinner"></div>
@@ -59,9 +85,48 @@
     </div>
   </div>
 
+  <!-- 新規追加ボタン (FAB) -->
+  <button class="fab" onclick="openModal()" title="新メニューを追加">＋</button>
+
+  <!-- 新規メニュー追加モーダル -->
+  <div id="add-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">新メニュー登録</div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>商品名</label>
+          <input type="text" id="new-name" class="form-control" placeholder="例: 唐揚げ弁当">
+        </div>
+        <div class="form-group">
+          <label>価格 (円)</label>
+          <input type="number" id="new-price" class="form-control" placeholder="700">
+        </div>
+        <div class="form-group">
+          <label>説明文</label>
+          <textarea id="new-description" class="form-control" placeholder="商品のこだわりなど"></textarea>
+        </div>
+        <div class="form-group">
+          <label>メニュー写真</label>
+          <div class="preview-area" id="new-preview-box" onclick="document.getElementById('new-file').click()">
+            <div id="new-preview-placeholder">📸 写真を選択</div>
+            <img id="new-preview-img" style="display:none">
+          </div>
+          <input type="file" id="new-file" style="display:none" accept="image/*" onchange="previewImage(this, 'new-preview-img', 'new-preview-placeholder', 'new-preview-box')">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-toggle" style="flex:1" onclick="closeModal()">キャンセル</button>
+        <button class="btn btn-save" id="btn-add-submit" style="flex:2" onclick="addNewMenu()">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 画像入れ替え用隠しInput -->
+  <input type="file" id="swap-file" style="display:none" accept="image/*">
+
   <script>
-    // ★重要: ここにあなたのGASウェブアプリのURLを入力してください
     const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxiBqWGuGsZIAvkEFOgWJkodL9lYngLYioboQf0BSj-PIrNb1GQBiWpG8QG9OHX47Q0/exec';
+    let currentMenuData = [];
 
     /**
      * メニュー読み込み
@@ -73,6 +138,7 @@
         if (!response.ok) throw new Error('サーバーに接続できませんでした');
         const data = await response.json();
         if (data.error) throw new Error(data.message);
+        currentMenuData = data;
         render(data);
       } catch (e) {
         console.error('Fetch error:', e);
@@ -80,7 +146,6 @@
           <div class="error-box">
             <p><strong>データの読み込みに失敗しました</strong></p>
             <p style="font-size:12px; color:#666;">原因: ${e.message}</p>
-            <p style="font-size:11px; color:#999; margin-top:10px;">GAS側で「全員（匿名ユーザー）」にアクセス許可が出ているか確認してください。</p>
             <button onclick="loadMenu()" style="margin-top:15px; padding:10px 20px; border-radius:8px; border:1px solid #ddd; background:white;">再読み込み</button>
           </div>
         `;
@@ -98,8 +163,13 @@
       }
 
       container.innerHTML = items.map(item => `
-        <div class="card">
-          <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Image+Error'">
+        <div class="card" id="card-${item.sku}">
+          <div class="image-container">
+            <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" id="img-${item.sku}" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Image+Error'">
+            <div class="image-edit-overlay" onclick="triggerSwapImage('${item.sku}')">
+              <span>📷 画像を変更</span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="flex-header">
               <div class="title-area">
@@ -118,8 +188,8 @@
             </div>
             
             <div class="action-group">
-              <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})">保存する</button>
-              <button class="btn btn-toggle ${item.isOnSale ? 'to-off' : 'to-on'}" onclick="update('${item.sku}', ${!item.isOnSale})">
+              <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})" id="save-${item.sku}">保存する</button>
+              <button class="btn btn-toggle ${item.isOnSale ? 'to-off' : 'to-on'}" onclick="update('${item.sku}', ${!item.isOnSale})" id="toggle-${item.sku}">
                 ${item.isOnSale ? '売り切れにする' : '販売を再開'}
               </button>
             </div>
@@ -129,9 +199,9 @@
     }
 
     /**
-     * 更新処理
+     * 更新処理 (既存メニュー)
      */
-    async function update(sku, isOnSale) {
+    async function update(sku, isOnSale, base64Image = null) {
       const priceInput = document.getElementById('p-' + sku);
       const price = priceInput.value;
       
@@ -140,36 +210,149 @@
         return;
       }
 
-      const confirmMsg = isOnSale ? '変更を保存してよろしいですか？' : 'この商品を売り切れ（非表示）に変更しますか？';
-      if (!confirm(confirmMsg)) return;
+      if (!base64Image) {
+        const confirmMsg = isOnSale ? '変更を保存してよろしいですか？' : 'この商品を売り切れ（非表示）に変更しますか？';
+        if (!confirm(confirmMsg)) return;
+      }
 
-      // 更新中はボタンを無効化
-      const btns = document.querySelectorAll('button');
-      btns.forEach(b => b.disabled = true);
+      setBusy(true, sku);
 
       try {
-        // GASのdoPostへ送信
-        // mode: 'no-cors' ではレスポンスが読めないため、
-        // GAS側で適切なCORSヘッダーが返る設定になっている必要があります
         const response = await fetch(BACKEND_URL, {
           method: 'POST',
           body: JSON.stringify({
             action: 'updateMenu',
             sku: sku,
             price: parseInt(price, 10),
-            isOnSale: isOnSale
+            isOnSale: isOnSale,
+            imageData: base64Image // 画像データ（あれば送信）
           })
         });
         
-        // 通常GASへのPOSTはリダイレクトが発生するためレスポンスが不透明になることが多いですが、
-        // 成功したとみなして再読み込みします
-        alert('更新リクエストを送信しました。');
-        setTimeout(loadMenu, 1000);
+        alert(base64Image ? '画像を更新しました！' : '更新が完了しました。');
+        await loadMenu();
       } catch (e) {
         console.error('Update error:', e);
-        alert('通信エラーが発生しました。しばらく経ってから再度お試しください。');
+        alert('エラーが発生しました。しばらく経ってから再度お試しください。');
       } finally {
-        btns.forEach(b => b.disabled = false);
+        setBusy(false, sku);
+      }
+    }
+
+    /**
+     * 画像入れ替えのトリガー
+     */
+    function triggerSwapImage(sku) {
+      const fileInput = document.getElementById('swap-file');
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!confirm('このメニューの画像をアップロードして入れ替えますか？')) return;
+        
+        const base64 = await toBase64(file);
+        // 現在の販売ステータスを維持してアップロード
+        const item = currentMenuData.find(i => i.sku === sku);
+        update(sku, item.isOnSale, base64);
+      };
+      fileInput.click();
+    }
+
+    /**
+     * モーダル操作
+     */
+    function openModal() { document.getElementById('add-modal').classList.add('active'); }
+    function closeModal() { 
+      document.getElementById('add-modal').classList.remove('active');
+      // フォームリセット
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-price').value = '';
+      document.getElementById('new-description').value = '';
+      document.getElementById('new-file').value = '';
+      document.getElementById('new-preview-img').style.display = 'none';
+      document.getElementById('new-preview-placeholder').style.display = 'block';
+      document.getElementById('new-preview-box').classList.remove('has-img');
+    }
+
+    /**
+     * 新規メニュー追加
+     */
+    async function addNewMenu() {
+      const name = document.getElementById('new-name').value;
+      const price = document.getElementById('new-price').value;
+      const desc = document.getElementById('new-description').value;
+      const fileInput = document.getElementById('new-file');
+      
+      if (!name || !price) {
+        alert('商品名と価格は必須です。');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-add-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '処理中...';
+
+      try {
+        let imageData = null;
+        if (fileInput.files[0]) {
+          imageData = await toBase64(fileInput.files[0]);
+        }
+
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'addMenu',
+            name: name,
+            price: parseInt(price, 10),
+            description: desc,
+            imageData: imageData
+          })
+        });
+
+        alert('新メニューを登録しました！');
+        closeModal();
+        await loadMenu();
+      } catch (e) {
+        alert('登録に失敗しました。通信環境を確認してください。');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登録する';
+      }
+    }
+
+    /**
+     * 汎用ユーティリティ
+     */
+    function setBusy(isBusy, sku) {
+      const saveBtn = document.getElementById('save-' + sku);
+      const toggleBtn = document.getElementById('toggle-' + sku);
+      if (saveBtn) saveBtn.disabled = isBusy;
+      if (toggleBtn) toggleBtn.disabled = isBusy;
+      if (isBusy && saveBtn) saveBtn.textContent = '処理中...';
+      else if (saveBtn) saveBtn.textContent = '保存する';
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    function previewImage(input, imgId, placeholderId, boxId) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = document.getElementById(imgId);
+          img.src = e.target.result;
+          img.style.display = 'block';
+          document.getElementById(placeholderId).style.display = 'none';
+          document.getElementById(boxId).classList.add('has-img');
+        };
+        reader.readAsDataURL(file);
       }
     }
 
