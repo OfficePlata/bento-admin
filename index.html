@@ -28,7 +28,7 @@
     .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; font-size: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
-    .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; }
+    .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; max-height: 90vh; overflow-y: auto; }
     .form-group { margin-bottom: 15px; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
     .loading-spinner { border: 3px solid rgba(0,0,0,0.1); width: 24px; height: 24px; border-radius: 50%; border-left-color: var(--primary-color); animation: spin 1s linear infinite; margin: 0 auto; }
@@ -45,7 +45,7 @@
       <div class="form-group"><input type="text" id="new-name" class="form-control" placeholder="商品名"></div>
       <div class="form-group"><input type="number" id="new-price" class="form-control" placeholder="価格"></div>
       <div class="form-group"><textarea id="new-description" class="form-control" placeholder="説明"></textarea></div>
-      <div class="form-group"><input type="file" id="new-file" accept="image/*"></div>
+      <div class="form-group"><label style="font-size:12px; color:#888;">メニュー写真</label><input type="file" id="new-file" class="form-control" accept="image/*"></div>
       <div style="display:flex; gap:10px;">
         <button class="btn btn-toggle" onclick="closeModal()">キャンセル</button>
         <button class="btn btn-save" id="btn-add" onclick="addNewMenu()">登録</button>
@@ -58,15 +58,21 @@
     let menuData = [];
 
     async function load() {
+      const app = document.getElementById('app');
       try {
         const res = await fetch(`${BACKEND_URL}?action=getAdminMenu`);
+        if (!res.ok) throw new Error();
         menuData = await res.json();
         render();
-      } catch (e) { alert("読み込み失敗"); }
+      } catch (e) { app.innerHTML = '<div style="text-align:center; padding:50px; color:red;">データの読み込みに失敗しました。</div>'; }
     }
 
     function render() {
       const app = document.getElementById('app');
+      if (menuData.length === 0) {
+        app.innerHTML = '<div style="text-align:center; padding:50px; color:#888;">メニューがありません。</div>';
+        return;
+      }
       app.innerHTML = menuData.map(item => `
         <div class="card" id="card-${item.sku}">
           <div class="image-container">
@@ -76,7 +82,7 @@
           <div class="card-body">
             <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '販売中' : '停止中'}</span>
             <div class="title">${item.name}</div>
-            <div class="price-section">¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}"></div>
+            <div class="price-section">販売価格 ¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}"></div>
             <div class="action-group">
               <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})">保存</button>
               <button class="btn btn-toggle" onclick="update('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '停止' : '再開'}</button>
@@ -89,21 +95,27 @@
     async function update(sku, isOnSale, img = null) {
       const price = document.getElementById('p-' + sku).value;
       const card = document.getElementById('card-' + sku);
-      card.classList.add('busy');
+      if (card) card.classList.add('busy');
       try {
         const res = await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'updateMenu', sku, price: parseInt(price), isOnSale, imageData: img }) });
         const result = await res.json();
-        if (result.success) { alert("更新完了"); await load(); } else { alert("エラー: " + result.message); }
-      } catch (e) { alert("通信エラー"); } finally { card.classList.remove('busy'); }
+        if (result.success) { 
+          alert(img ? "画像をアップロードしました" : "更新が完了しました"); 
+          await load(); 
+        } else { 
+          alert("エラー: " + result.message); 
+        }
+      } catch (e) { alert("通信エラーが発生しました。"); } finally { if (card) card.classList.remove('busy'); }
     }
 
     function triggerSwap(sku) {
       const f = document.getElementById('swap-file');
       f.onchange = async () => {
         if (!f.files[0]) return;
-        const b64 = await toB64(f.files[0]);
+        const b64 = await toBase64(f.files[0]);
         const item = menuData.find(i => i.sku === sku);
         update(sku, item.isOnSale, b64);
+        f.value = ""; // Clear file
       };
       f.click();
     }
@@ -116,18 +128,24 @@
       const price = document.getElementById('new-price').value;
       const desc = document.getElementById('new-description').value;
       const file = document.getElementById('new-file').files[0];
-      if (!name || !price) return alert("入力不足");
+      if (!name || !price) return alert("メニュー名と価格は必須です。");
       const btn = document.getElementById('btn-add');
       btn.disabled = true; btn.textContent = "登録中...";
       try {
-        const img = file ? await toB64(file) : null;
+        const img = file ? await toBase64(file) : null;
         const res = await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'addMenu', name, price, description: desc, imageData: img }) });
         const result = await res.json();
-        if (result.success) { alert("登録完了"); closeModal(); await load(); } else { alert(result.message); }
-      } catch (e) { alert("エラー"); } finally { btn.disabled = false; btn.textContent = "登録"; }
+        if (result.success) { 
+          alert("新メニューを追加しました"); 
+          closeModal(); 
+          await load(); 
+        } else { 
+          alert("エラー: " + result.message); 
+        }
+      } catch (e) { alert("通信エラーが発生しました。"); } finally { btn.disabled = false; btn.textContent = "登録"; }
     }
 
-    const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); r.onerror = e => rej(e); });
+    const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); r.onerror = e => rej(e); });
 
     window.onload = load;
   </script>
