@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【店主用】らくらく弁当管理</title>
+  <style>
+    :root {
+      --primary-color: #1db446;
+      --error-color: #ff4d4f;
+      --bg-color: #f0f2f5;
+    }
+    body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: env(safe-area-inset-bottom); color: #333; }
+    header { background: var(--primary-color); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    
+    .container { padding: 12px; max-width: 500px; margin: 0 auto; }
+    
+    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee; }
+    
+    .card-image { width: 100%; height: 160px; object-fit: cover; background: #eee; }
+    
+    .card-body { padding: 16px; }
+    
+    .flex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    
+    .title-area { flex: 1; padding-right: 10px; }
+    .title { font-weight: bold; font-size: 18px; line-height: 1.3; }
+    .option-text { font-size: 13px; color: #666; margin-top: 4px; }
+    
+    .status-badge { font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: bold; white-space: nowrap; }
+    .status-on { background: #e6ffed; color: #1db446; border: 1px solid #b7eb8f; }
+    .status-off { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+    
+    .price-section { display: flex; align-items: center; gap: 8px; margin: 15px 0; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+    .price-label { font-size: 14px; font-weight: bold; color: #888; }
+    .price-input { flex: 1; font-size: 22px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; text-align: right; font-weight: bold; color: var(--primary-color); width: 100%; }
+    
+    .action-group { display: flex; gap: 10px; }
+    .btn { border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 15px; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+    .btn:active { opacity: 0.7; }
+    .btn-save { background: var(--primary-color); color: white; flex: 2; }
+    .btn-toggle { background: #f0f0f0; color: #555; flex: 1; }
+    .btn-toggle.to-off { background: #fff1f0; color: #ff4d4f; }
+    .btn-toggle.to-on { background: #e6ffed; color: #1db446; }
+
+    #loading { text-align: center; padding: 100px 20px; color: #999; }
+    .loading-spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--primary-color); animation: spin 1s linear infinite; margin: 0 auto 10px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .error-box { background: #fff1f0; color: #ff4d4f; padding: 20px; border-radius: 12px; border: 1px solid #ffa39e; margin: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>お弁当メニュー管理</header>
+  <div class="container" id="app">
+    <div id="loading">
+      <div class="loading-spinner"></div>
+      <div>情報を取得中...</div>
+    </div>
+  </div>
+
+  <script>
+    // ★重要: ここにあなたのGASウェブアプリのURLを入力してください
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxiBqWGuGsZIAvkEFOgWJkodL9lYngLYioboQf0BSj-PIrNb1GQBiWpG8QG9OHX47Q0/exec';
+
+    /**
+     * メニュー読み込み
+     */
+    async function loadMenu() {
+      const appContainer = document.getElementById('app');
+      try {
+        const response = await fetch(`${BACKEND_URL}?action=getAdminMenu`);
+        if (!response.ok) throw new Error('サーバーに接続できませんでした');
+        const data = await response.json();
+        if (data.error) throw new Error(data.message);
+        render(data);
+      } catch (e) {
+        console.error('Fetch error:', e);
+        appContainer.innerHTML = `
+          <div class="error-box">
+            <p><strong>データの読み込みに失敗しました</strong></p>
+            <p style="font-size:12px; color:#666;">原因: ${e.message}</p>
+            <p style="font-size:11px; color:#999; margin-top:10px;">GAS側で「全員（匿名ユーザー）」にアクセス許可が出ているか確認してください。</p>
+            <button onclick="loadMenu()" style="margin-top:15px; padding:10px 20px; border-radius:8px; border:1px solid #ddd; background:white;">再読み込み</button>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * 描画処理
+     */
+    function render(items) {
+      const container = document.getElementById('app');
+      if (!items || items.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:50px; color:#888;">メニューが見つかりません。</p>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card">
+          <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Image+Error'">
+          <div class="card-body">
+            <div class="flex-header">
+              <div class="title-area">
+                <div class="title">${item.name}</div>
+                <div class="option-text">${item.optionName || '通常'}</div>
+              </div>
+              <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">
+                ${item.isOnSale ? '販売中' : '売り切れ中'}
+              </span>
+            </div>
+            
+            <div class="price-section">
+              <span class="price-label">販売価格</span>
+              <span style="font-size:18px; font-weight:bold;">¥</span>
+              <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}" pattern="\\d*">
+            </div>
+            
+            <div class="action-group">
+              <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})">保存する</button>
+              <button class="btn btn-toggle ${item.isOnSale ? 'to-off' : 'to-on'}" onclick="update('${item.sku}', ${!item.isOnSale})">
+                ${item.isOnSale ? '売り切れにする' : '販売を再開'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /**
+     * 更新処理
+     */
+    async function update(sku, isOnSale) {
+      const priceInput = document.getElementById('p-' + sku);
+      const price = priceInput.value;
+      
+      if (!price || price < 0) {
+        alert('正しい価格を入力してください。');
+        return;
+      }
+
+      const confirmMsg = isOnSale ? '変更を保存してよろしいですか？' : 'この商品を売り切れ（非表示）に変更しますか？';
+      if (!confirm(confirmMsg)) return;
+
+      // 更新中はボタンを無効化
+      const btns = document.querySelectorAll('button');
+      btns.forEach(b => b.disabled = true);
+
+      try {
+        // GASのdoPostへ送信
+        // mode: 'no-cors' ではレスポンスが読めないため、
+        // GAS側で適切なCORSヘッダーが返る設定になっている必要があります
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'updateMenu',
+            sku: sku,
+            price: parseInt(price, 10),
+            isOnSale: isOnSale
+          })
+        });
+        
+        // 通常GASへのPOSTはリダイレクトが発生するためレスポンスが不透明になることが多いですが、
+        // 成功したとみなして再読み込みします
+        alert('更新リクエストを送信しました。');
+        setTimeout(loadMenu, 1000);
+      } catch (e) {
+        console.error('Update error:', e);
+        alert('通信エラーが発生しました。しばらく経ってから再度お試しください。');
+      } finally {
+        btns.forEach(b => b.disabled = false);
+      }
+    }
+
+    window.onload = loadMenu;
+  </script>
+</body>
+</html>
