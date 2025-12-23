@@ -16,11 +16,12 @@
     
     .container { padding: 12px; max-width: 500px; margin: 0 auto; }
     
-    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee; position: relative; }
+    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee; position: relative; transition: opacity 0.3s; }
+    .card.busy { opacity: 0.6; pointer-events: none; }
     
     .image-container { position: relative; width: 100%; height: 180px; background: #eee; overflow: hidden; }
     .card-image { width: 100%; height: 100%; object-fit: cover; }
-    .image-edit-overlay { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .image-edit-overlay { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 8px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
     .card-body { padding: 16px; }
     
@@ -120,7 +121,7 @@
   <input type="file" id="swap-file" style="display:none" accept="image/*">
 
   <script>
-    // ★重要: あなたのGASのウェブアプリURLをここに記入してください
+    // ★重要: GASのウェブアプリURLを正確に記入してください
     const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxiBqWGuGsZIAvkEFOgWJkodL9lYngLYioboQf0BSj-PIrNb1GQBiWpG8QG9OHX47Q0/exec';
     let currentMenuData = [];
 
@@ -157,7 +158,7 @@
           <div class="image-container">
             <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" id="img-${item.sku}" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Image+Error'">
             <div class="image-edit-overlay" onclick="triggerSwapImage('${item.sku}')">
-              <span>📷 画像を変更</span>
+              <span>📸 画像を変更</span>
             </div>
           </div>
           <div class="card-body">
@@ -218,14 +219,14 @@
         
         const result = await response.json();
         if (result.success) {
-          alert(base64Image ? '画像を更新しました！' : '更新が完了しました。');
+          alert(base64Image ? '画像をアップロードし、情報を更新しました！' : '更新が完了しました。');
           await loadMenu();
         } else {
-          alert('更新に失敗しました: ' + result.message);
+          alert('更新に失敗しました: ' + (result.message || 'サーバーエラー'));
         }
       } catch (e) {
         console.error('Update error:', e);
-        alert('エラーが発生しました。しばらく経ってから再度お試しください。');
+        alert('通信エラーが発生しました。しばらく経ってから再度お試しください。');
       } finally {
         setBusy(false, sku);
       }
@@ -271,7 +272,7 @@
 
       const submitBtn = document.getElementById('btn-add-submit');
       submitBtn.disabled = true;
-      submitBtn.textContent = '処理中...';
+      submitBtn.textContent = '登録中...';
 
       try {
         let imageData = null;
@@ -296,10 +297,10 @@
           closeModal();
           await loadMenu();
         } else {
-          alert('登録に失敗しました: ' + result.message);
+          alert('登録に失敗しました: ' + (result.message || 'サーバーエラー'));
         }
       } catch (e) {
-        alert('登録に失敗しました。通信環境を確認してください。');
+        alert('登録中にエラーが発生しました。通信環境を確認してください。');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '登録する';
@@ -307,11 +308,19 @@
     }
 
     function setBusy(isBusy, sku) {
+      const card = document.getElementById('card-' + sku);
       const saveBtn = document.getElementById('save-' + sku);
       const toggleBtn = document.getElementById('toggle-' + sku);
+      
+      if (card) {
+        if (isBusy) card.classList.add('busy');
+        else card.classList.remove('busy');
+      }
+      
       if (saveBtn) saveBtn.disabled = isBusy;
       if (toggleBtn) toggleBtn.disabled = isBusy;
-      if (isBusy && saveBtn) saveBtn.textContent = '処理中...';
+      
+      if (isBusy && saveBtn) saveBtn.innerHTML = '<div class="loading-spinner" style="width:16px; height:16px; margin:0; border-width:2px;"></div> 処理中';
       else if (saveBtn) saveBtn.textContent = '保存する';
     }
 
