@@ -11,48 +11,67 @@
     .container { padding: 12px; max-width: 500px; margin: 0 auto; }
     .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
     .card.busy { opacity: 0.5; pointer-events: none; }
+    /* 画像コンテナ */
     .image-container { position: relative; width: 100%; height: 180px; background: #ddd; }
     .card-image { width: 100%; height: 100%; object-fit: cover; }
     .image-edit-overlay { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+    /* カードボディ */
     .card-body { padding: 16px; }
-    .title { font-weight: bold; font-size: 18px; margin-bottom: 8px; }
-    .status-badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: bold; float: right; }
+    .title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .title { font-weight: bold; font-size: 18px; flex: 1; }
+    .status-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: bold; white-space: nowrap; margin-left: 8px; }
     .status-on { background: #e6ffed; color: #1db446; }
     .status-off { background: #fff1f0; color: #ff4d4f; }
-    .price-section { display: flex; align-items: center; gap: 8px; margin: 15px 0; background: #f9f9f9; padding: 10px; border-radius: 8px; }
-    .price-input { flex: 1; font-size: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 5px; text-align: right; width: 100px; }
+    
+    .price-section { display: flex; align-items: center; gap: 8px; margin: 12px 0; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+    .price-input { flex: 1; font-size: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 5px; text-align: right; width: 100px; font-weight: bold; color: var(--primary-color); }
+    
     .action-group { display: flex; gap: 8px; }
     .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; }
     .btn-save { background: var(--primary-color); color: white; }
     .btn-toggle { background: #eee; color: #666; }
-    .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; font-size: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; font-size: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 150; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; max-height: 90vh; overflow-y: auto; }
     .form-group { margin-bottom: 15px; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    
     .loading-spinner { border: 3px solid rgba(0,0,0,0.1); width: 24px; height: 24px; border-radius: 50%; border-left-color: var(--primary-color); animation: spin 1s linear infinite; margin: 0 auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <header>お弁当メニュー管理</header>
-  <div class="container" id="app"><div style="text-align:center; padding:50px;">読み込み中...</div></div>
+  
+  <div class="container" id="app">
+    <div style="text-align:center; padding:50px;">読み込み中...</div>
+  </div>
+
   <button class="fab" onclick="openModal()">＋</button>
+
+  <!-- 新規登録モーダル -->
   <div id="add-modal" class="modal">
     <div class="modal-content">
       <h3 style="margin-top:0">新メニュー登録</h3>
-      <div class="form-group"><input type="text" id="new-name" class="form-control" placeholder="商品名"></div>
-      <div class="form-group"><input type="number" id="new-price" class="form-control" placeholder="価格"></div>
-      <div class="form-group"><textarea id="new-description" class="form-control" placeholder="説明"></textarea></div>
-      <div class="form-group"><label style="font-size:12px; color:#888;">メニュー写真</label><input type="file" id="new-file" class="form-control" accept="image/*"></div>
+      <div class="form-group"><input type="text" id="new-name" class="form-control" placeholder="商品名（例: 唐揚げ弁当）"></div>
+      <div class="form-group"><input type="number" id="new-price" class="form-control" placeholder="価格（例: 600）"></div>
+      <div class="form-group"><textarea id="new-description" class="form-control" placeholder="商品の説明"></textarea></div>
+      <div class="form-group">
+        <label style="font-size:12px; color:#888; display:block; margin-bottom:4px;">メニュー写真（通常盛り用）</label>
+        <input type="file" id="new-file" class="form-control" accept="image/*">
+      </div>
       <div style="display:flex; gap:10px;">
         <button class="btn btn-toggle" onclick="closeModal()">キャンセル</button>
         <button class="btn btn-save" id="btn-add" onclick="addNewMenu()">登録</button>
       </div>
     </div>
   </div>
+
+  <!-- 画像入れ替え用隠しInput -->
   <input type="file" id="swap-file" style="display:none" accept="image/*">
+
   <script>
     const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxiBqWGuGsZIAvkEFOgWJkodL9lYngLYioboQf0BSj-PIrNb1GQBiWpG8QG9OHX47Q0/exec';
     let menuData = [];
@@ -73,39 +92,65 @@
         app.innerHTML = '<div style="text-align:center; padding:50px; color:#888;">メニューがありません。</div>';
         return;
       }
-      app.innerHTML = menuData.map(item => `
-        <div class="card" id="card-${item.sku}">
+
+      app.innerHTML = menuData.map(item => {
+        // 「大盛り」や「おかずのみ」の場合は画像エリアを非表示にする
+        const isSubOption = (item.optionName === '大盛り' || item.optionName === 'おかずのみ');
+        
+        const imageHtml = isSubOption ? '' : `
           <div class="image-container">
             <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Error'">
-            <div class="image-edit-overlay" onclick="triggerSwap('${item.sku}')">📷 変更</div>
+            <div class="image-edit-overlay" onclick="triggerSwap('${item.sku}')">📷 画像を変更</div>
           </div>
-          <div class="card-body">
-            <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '販売中' : '停止中'}</span>
-            <div class="title">${item.name}</div>
-            <div class="price-section">販売価格 ¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}"></div>
-            <div class="action-group">
-              <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})">保存</button>
-              <button class="btn btn-toggle" onclick="update('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '停止' : '再開'}</button>
+        `;
+
+        return `
+          <div class="card" id="card-${item.sku}">
+            ${imageHtml}
+            <div class="card-body">
+              <div class="title-row">
+                <div class="title">${item.name} <span style="font-size:14px; color:#666; font-weight:normal;">${item.optionName ? '(' + item.optionName + ')' : ''}</span></div>
+                <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '販売中' : '停止中'}</span>
+              </div>
+              <div class="price-section">
+                <span style="font-size:14px; color:#888;">価格</span>
+                ¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}">
+              </div>
+              <div class="action-group">
+                <button class="btn btn-save" onclick="update('${item.sku}', ${item.isOnSale})">保存</button>
+                <button class="btn btn-toggle" onclick="update('${item.sku}', ${!item.isOnSale})">
+                  ${item.isOnSale ? '販売停止' : '再開する'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function update(sku, isOnSale, img = null) {
       const price = document.getElementById('p-' + sku).value;
       const card = document.getElementById('card-' + sku);
       if (card) card.classList.add('busy');
+
       try {
-        const res = await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'updateMenu', sku, price: parseInt(price), isOnSale, imageData: img }) });
+        const res = await fetch(BACKEND_URL, { 
+          method: 'POST', 
+          body: JSON.stringify({ action: 'updateMenu', sku, price: parseInt(price), isOnSale, imageData: img }) 
+        });
         const result = await res.json();
         if (result.success) { 
-          alert(img ? "画像をアップロードしました" : "更新が完了しました"); 
+          if (!img) alert("更新が完了しました"); 
+          else alert("画像をアップロードしました");
           await load(); 
         } else { 
           alert("エラー: " + result.message); 
         }
-      } catch (e) { alert("通信エラーが発生しました。"); } finally { if (card) card.classList.remove('busy'); }
+      } catch (e) { 
+        alert("通信エラーが発生しました。"); 
+      } finally { 
+        if (card) card.classList.remove('busy'); 
+      }
     }
 
     function triggerSwap(sku) {
@@ -115,7 +160,7 @@
         const b64 = await toBase64(f.files[0]);
         const item = menuData.find(i => i.sku === sku);
         update(sku, item.isOnSale, b64);
-        f.value = ""; // Clear file
+        f.value = ""; 
       };
       f.click();
     }
@@ -128,12 +173,18 @@
       const price = document.getElementById('new-price').value;
       const desc = document.getElementById('new-description').value;
       const file = document.getElementById('new-file').files[0];
+      
       if (!name || !price) return alert("メニュー名と価格は必須です。");
+      
       const btn = document.getElementById('btn-add');
       btn.disabled = true; btn.textContent = "登録中...";
+
       try {
         const img = file ? await toBase64(file) : null;
-        const res = await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'addMenu', name, price, description: desc, imageData: img }) });
+        const res = await fetch(BACKEND_URL, { 
+          method: 'POST', 
+          body: JSON.stringify({ action: 'addMenu', name, price, description: desc, imageData: img }) 
+        });
         const result = await res.json();
         if (result.success) { 
           alert("新メニューを追加しました"); 
@@ -142,10 +193,19 @@
         } else { 
           alert("エラー: " + result.message); 
         }
-      } catch (e) { alert("通信エラーが発生しました。"); } finally { btn.disabled = false; btn.textContent = "登録"; }
+      } catch (e) { 
+        alert("通信エラーが発生しました。"); 
+      } finally { 
+        btn.disabled = false; btn.textContent = "登録"; 
+      }
     }
 
-    const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); r.onerror = e => rej(e); });
+    const toBase64 = f => new Promise((res, rej) => { 
+      const r = new FileReader(); 
+      r.readAsDataURL(f); 
+      r.onload = () => res(r.result); 
+      r.onerror = e => rej(e); 
+    });
 
     window.onload = load;
   </script>
