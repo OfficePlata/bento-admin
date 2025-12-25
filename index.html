@@ -10,12 +10,39 @@
       --bg-color: #f0f2f5;
       --text-main: #333;
       --text-sub: #666;
+      --accent-color: #ffffff;
     }
     body { font-family: -apple-system, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 80px; color: var(--text-main); }
     
-    /* ヘッダー & タブ */
-    header { background: var(--primary-color); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .nav-tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 51px; z-index: 90; }
+    /* ヘッダー & サイト確認ボタン */
+    header { 
+      background: var(--primary-color); 
+      color: white; 
+      padding: 12px 15px; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    }
+    .header-title { font-weight: bold; font-size: 16px; }
+    .view-site-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .view-site-btn:active { background: rgba(255, 255, 255, 0.4); }
+
+    /* タブ */
+    .nav-tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 52px; z-index: 90; }
     .nav-tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; color: var(--text-sub); cursor: pointer; border-bottom: 3px solid transparent; }
     .nav-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); background: #f9fff9; }
 
@@ -24,7 +51,7 @@
     .view.active { display: block; }
 
     /* メニューカード */
-    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
+    .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; transition: opacity 0.3s; }
     .card.busy { opacity: 0.5; pointer-events: none; }
     
     .image-container { position: relative; width: 100%; height: 160px; background: #ddd; }
@@ -51,16 +78,14 @@
     .btn-save { background: var(--primary-color); color: white; }
     .btn-toggle { background: #f0f0f0; color: #555; }
     
-    /* 並べ替えボタン */
     .sort-controls { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 10px; }
     .btn-sort { background: white; border: 1px solid #ddd; padding: 5px 10px; border-radius: 6px; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
 
-    /* 設定画面用スタイル */
     .settings-group { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; margin-bottom: 20px; }
     .settings-title { font-weight: bold; font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary-color); }
     .help-text { font-size: 12px; color: #888; margin-top: 4px; margin-bottom: 10px; line-height: 1.4; }
 
-    .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; font-size: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 150; }
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 30px; font-size: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 150; display: flex; align-items: center; justify-content: center; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-content { background: white; width: 92%; max-width: 450px; border-radius: 20px; padding: 20px; max-height: 90vh; overflow-y: auto; }
@@ -70,11 +95,14 @@
   </style>
 </head>
 <body>
-  <header>お弁当メニュー管理</header>
+  <header>
+    <div class="header-title">お弁当メニュー管理</div>
+    <a href="https://lark-bento-order.pages.dev" target="_blank" class="view-site-btn">注文サイトを確認 ↗</a>
+  </header>
   
   <nav class="nav-tabs">
-    <div class="nav-tab active" id="tab-menu" onclick="switchTab('menu')">🍱 メニュー管理</div>
-    <div class="nav-tab" id="tab-settings" onclick="switchTab('settings')">⚙️ 基本設定・ルール</div>
+    <div class="nav-tab active" id="tab-menu" onclick="switchTab('menu')">🍱 メニュー</div>
+    <div class="nav-tab" id="tab-settings" onclick="switchTab('settings')">⚙️ 基本設定</div>
   </nav>
 
   <div class="container">
@@ -91,7 +119,7 @@
         <div class="settings-title">⏰ 注文受付ルール</div>
         <div class="form-item">
           <label class="label-small">当日注文の締め切り時間</label>
-          <input type="time" id="set-deadline" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+          <input type="time" id="set-deadline" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px;">
           <p class="help-text">この時間を過ぎると当日分は選択できなくなります。</p>
         </div>
       </div>
@@ -99,13 +127,13 @@
       <div class="settings-group">
         <div class="settings-title">📍 配達・案内文面</div>
         <div class="form-item">
-          <label class="label-small">配達エリア・注文ルール説明</label>
+          <label class="label-small">トップページの案内文</label>
           <textarea id="set-rules-text" class="desc-input" placeholder="例: ○○エリアは2個以上から承ります..."></textarea>
-          <p class="help-text">ユーザー側の注文画面のトップに表示される案内文です。</p>
+          <p class="help-text">ユーザー側の注文画面のトップに表示される重要な案内文です。</p>
         </div>
       </div>
 
-      <button class="btn btn-save" style="width:100%; padding:15px;" onclick="saveGeneralSettings()">設定を保存する</button>
+      <button class="btn btn-save" style="width:100%; padding:15px; border-radius:12px;" onclick="saveGeneralSettings()">設定を保存する</button>
     </div>
   </div>
 
@@ -115,16 +143,16 @@
   <div id="add-modal" class="modal">
     <div class="modal-content">
       <h3 style="margin-top:0">新メニュー登録</h3>
-      <div class="form-group"><input type="text" id="new-name" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;" placeholder="商品名"></div>
-      <div class="form-group"><input type="number" id="new-price" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;" placeholder="価格"></div>
-      <div class="form-group"><textarea id="new-description" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;" placeholder="商品の説明（こだわりなど）"></textarea></div>
+      <div class="form-group"><input type="text" id="new-name" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box;" placeholder="商品名"></div>
+      <div class="form-group"><input type="number" id="new-price" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box;" placeholder="価格"></div>
+      <div class="form-group"><textarea id="new-description" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box; height:80px;" placeholder="商品の説明"></textarea></div>
       <div class="form-group">
         <label style="font-size:12px; color:#888;">メニュー写真</label>
-        <input type="file" id="new-file" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" accept="image/*">
+        <input type="file" id="new-file" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" accept="image/*">
       </div>
       <div style="display:flex; gap:10px; margin-top:20px;">
         <button class="btn btn-toggle" onclick="closeModal()">キャンセル</button>
-        <button class="btn btn-save" id="btn-add-submit" onclick="addNewMenu()">登録</button>
+        <button class="btn btn-save" id="btn-add-submit" onclick="addNewMenu()">登録する</button>
       </div>
     </div>
   </div>
@@ -136,14 +164,13 @@
     let menuData = [];
 
     async function loadData() {
+      const menuList = document.getElementById('menu-list');
       try {
         const res = await fetch(`${BACKEND_URL}?action=getAdminMenu`);
         const data = await res.json();
         
-        // バックエンドが settings を含むオブジェクトを返すことを想定
-        menuData = data.menu || data;
+        menuData = data.menu || [];
         
-        // 設定データがあれば反映
         if (data.settings) {
           document.getElementById('set-deadline').value = data.settings.deadline || "10:00";
           document.getElementById('set-rules-text').value = data.settings.rulesText || "";
@@ -151,7 +178,7 @@
         
         renderMenu();
       } catch (e) {
-        document.getElementById('menu-list').innerHTML = '<div style="text-align:center; color:red; padding:20px;">読み込みに失敗しました</div>';
+        menuList.innerHTML = '<div style="text-align:center; color:red; padding:20px;">接続に失敗しました</div>';
       }
     }
 
@@ -162,14 +189,13 @@
       document.getElementById('tab-' + target).classList.add('active');
       document.getElementById('view-' + target).classList.add('active');
       
-      const fab = document.getElementById('fab-add');
-      fab.style.display = (target === 'menu') ? 'flex' : 'none';
+      document.getElementById('fab-add').style.display = (target === 'menu') ? 'flex' : 'none';
     }
 
     function renderMenu() {
       const container = document.getElementById('menu-list');
       if (menuData.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px; color:#888;">メニューがありません。</div>';
+        container.innerHTML = '<div style="text-align:center; padding:50px; color:#888;">登録されているメニューはありません。</div>';
         return;
       }
 
@@ -180,35 +206,36 @@
             ${!isSub ? `
               <div class="image-container">
                 <img src="${item.imageUrl || 'https://placehold.jp/24/cccccc/ffffff/300x200.png?text=No+Image'}" class="card-image" onerror="this.src='https://placehold.jp/24/cccccc/ffffff/300x200.png?text=Error'">
-                <div class="image-edit-overlay" onclick="triggerSwap('${item.sku}')">📷 変更</div>
+                <div class="image-edit-overlay" onclick="triggerSwap('${item.sku}')">📷 画像変更</div>
               </div>
             ` : ''}
             <div class="card-body">
               <div class="title-row">
                 <div class="title">${item.name} <span style="font-size:13px; font-weight:normal; color:#888;">${item.optionName || ''}</span></div>
-                <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '販売中' : '停止中'}</span>
+                <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '表示中' : '非表示'}</span>
               </div>
               
               ${!isSub ? `
                 <div class="form-item">
-                  <label class="label-small">説明文</label>
-                  <textarea id="desc-${item.sku}" class="desc-input" placeholder="商品の説明・こだわりを入力">${item.description || ''}</textarea>
+                  <label class="label-small">商品の説明</label>
+                  <textarea id="desc-${item.sku}" class="desc-input">${item.description || ''}</textarea>
                 </div>
               ` : ''}
 
-              <div class="price-section">
-                <span class="label-small" style="margin:0">価格</span>
-                ¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}">
+              <div class="price-input-group">
+                <span class="label-small" style="margin:0">¥</span>
+                <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}">
               </div>
 
               <div class="action-group">
-                <button class="btn btn-save" onclick="updateItem('${item.sku}', ${item.isOnSale})">保存</button>
-                <button class="btn btn-toggle" onclick="updateItem('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '停止' : '再開'}</button>
+                <button class="btn btn-save" onclick="updateItem('${item.sku}', ${item.isOnSale})">情報を更新</button>
+                <button class="btn btn-toggle" onclick="updateItem('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '非表示にする' : '表示する'}</button>
               </div>
 
               <div class="sort-controls">
-                <button class="btn-sort" onclick="moveOrder('${item.sku}', 'up')" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>↑ 上へ</button>
-                <button class="btn-sort" onclick="moveOrder('${item.sku}', 'down')" ${index === menuData.length - 1 ? 'disabled style="opacity:0.3"' : ''}>↓ 下へ</button>
+                <button class="btn-sort" onclick="moveOrder('${item.sku}', 'up')" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>↑</button>
+                <button class="btn-sort" onclick="moveOrder('${item.sku}', 'down')" ${index === menuData.length - 1 ? 'disabled style="opacity:0.3"' : ''}>↓</button>
+                <span style="font-size:11px; color:#bbb; flex:1; text-align:right;">並べ替え</span>
               </div>
             </div>
           </div>
@@ -218,7 +245,6 @@
 
     async function updateItem(sku, isOnSale, img = null) {
       const price = document.getElementById('p-' + sku).value;
-      // サブオプションの場合は説明文入力がないため考慮
       const descEl = document.getElementById('desc-' + sku);
       const desc = descEl ? descEl.value : "";
       
@@ -239,13 +265,13 @@
         });
         const result = await response.json();
         if (result.success) {
-          if (!img) alert("保存しました");
+          if (!img) alert("更新しました");
           loadData();
         } else {
-          alert("エラー: " + result.message);
+          alert("更新に失敗しました: " + result.message);
         }
       } catch (e) {
-        alert("通信エラー");
+        alert("エラーが発生しました");
       } finally {
         card.classList.remove('busy');
       }
@@ -259,7 +285,7 @@
         });
         const result = await response.json();
         if (result.success) loadData();
-      } catch (e) { alert("並べ替えに失敗しました"); }
+      } catch (e) { alert("並べ替えエラー"); }
     }
 
     async function saveGeneralSettings() {
@@ -277,17 +303,15 @@
         });
         const result = await response.json();
         if (result.success) alert("基本設定を保存しました");
-      } catch (e) { alert("保存に失敗しました"); }
+      } catch (e) { alert("保存エラー"); }
     }
 
-    // モーダル・ファイル関連
     function triggerSwap(sku) {
       const f = document.getElementById('swap-file');
       f.onchange = async () => {
         if (!f.files[0]) return;
         const b64 = await toBase64(f.files[0]);
-        const item = menuData.find(i => i.sku === sku);
-        updateItem(sku, item.isOnSale, b64);
+        updateItem(sku, true, b64);
         f.value = "";
       };
       f.click();
@@ -301,10 +325,10 @@
       const price = document.getElementById('new-price').value;
       const desc = document.getElementById('new-description').value;
       const file = document.getElementById('new-file').files[0];
-      if (!name || !price) return alert("名前と価格は必須です");
+      if (!name || !price) return alert("商品名と価格を入力してください");
 
       const btn = document.getElementById('btn-add-submit');
-      btn.disabled = true; btn.textContent = "処理中...";
+      btn.disabled = true; btn.textContent = "送信中...";
 
       try {
         const img = file ? await toBase64(file) : null;
@@ -314,13 +338,11 @@
         });
         const result = await res.json();
         if(result.success) {
-          alert("登録しました");
+          alert("登録完了しました");
           closeModal();
           loadData();
-        } else {
-          alert("登録エラー");
         }
-      } catch (e) { alert("通信エラー"); } finally { btn.disabled = false; btn.textContent = "登録"; }
+      } catch (e) { alert("送信エラー"); } finally { btn.disabled = false; btn.textContent = "登録する"; }
     }
 
     const toBase64 = f => new Promise((res, rej) => {
