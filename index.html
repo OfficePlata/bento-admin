@@ -10,11 +10,9 @@
       --bg-color: #f0f2f5;
       --text-main: #333;
       --text-sub: #666;
-      --accent-color: #ffffff;
     }
     body { font-family: -apple-system, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 80px; color: var(--text-main); }
     
-    /* ヘッダー & サイト確認ボタン */
     header { 
       background: var(--primary-color); 
       color: white; 
@@ -32,17 +30,14 @@
       background: rgba(255, 255, 255, 0.2);
       color: white;
       text-decoration: none;
-      font-size: 12px;
+      font-size: 11px;
       padding: 6px 12px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.5);
       font-weight: bold;
-      transition: background 0.2s;
     }
-    .view-site-btn:active { background: rgba(255, 255, 255, 0.4); }
 
-    /* タブ */
-    .nav-tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 52px; z-index: 90; }
+    .nav-tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 48px; z-index: 90; }
     .nav-tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; color: var(--text-sub); cursor: pointer; border-bottom: 3px solid transparent; }
     .nav-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); background: #f9fff9; }
 
@@ -50,7 +45,6 @@
     .view { display: none; }
     .view.active { display: block; }
 
-    /* メニューカード */
     .card { background: white; margin-bottom: 16px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; transition: opacity 0.3s; }
     .card.busy { opacity: 0.5; pointer-events: none; }
     
@@ -69,7 +63,7 @@
     .label-small { font-size: 12px; color: #999; display: block; margin-bottom: 4px; }
     
     .price-input-group { display: flex; align-items: center; gap: 5px; background: #f9f9f9; padding: 8px; border-radius: 8px; }
-    .price-input { flex: 1; font-size: 18px; border: 1px solid #ddd; border-radius: 6px; padding: 4px; text-align: right; font-weight: bold; color: var(--primary-color); }
+    .price-input { flex: 1; font-size: 18px; border: 1px solid #ddd; border-radius: 6px; padding: 4px; text-align: right; font-weight: bold; color: var(--primary-color); width: 80px; }
     
     .desc-input { width: 100%; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; box-sizing: border-box; resize: vertical; min-height: 60px; font-family: inherit; }
 
@@ -92,6 +86,8 @@
     
     .loading-spinner { border: 3px solid rgba(0,0,0,0.1); width: 24px; height: 24px; border-radius: 50%; border-left-color: var(--primary-color); animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .option-price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; background: #f8f8f8; padding: 12px; border-radius: 10px; border: 1px dashed #ccc; }
   </style>
 </head>
 <body>
@@ -106,53 +102,66 @@
   </nav>
 
   <div class="container">
-    <!-- メニュー管理ビュー -->
     <div id="view-menu" class="view active">
-      <div id="menu-list">
-        <div style="text-align:center; padding:50px;">読み込み中...</div>
-      </div>
+      <div id="menu-list"><div style="text-align:center; padding:50px;">読み込み中...</div></div>
     </div>
-
-    <!-- 設定ビュー -->
     <div id="view-settings" class="view">
       <div class="settings-group">
         <div class="settings-title">⏰ 注文受付ルール</div>
         <div class="form-item">
           <label class="label-small">当日注文の締め切り時間</label>
           <input type="time" id="set-deadline" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px;">
-          <p class="help-text">この時間を過ぎると当日分は選択できなくなります。</p>
         </div>
       </div>
-
       <div class="settings-group">
         <div class="settings-title">📍 配達・案内文面</div>
         <div class="form-item">
           <label class="label-small">トップページの案内文</label>
-          <textarea id="set-rules-text" class="desc-input" placeholder="例: ○○エリアは2個以上から承ります..."></textarea>
-          <p class="help-text">ユーザー側の注文画面のトップに表示される重要な案内文です。</p>
+          <textarea id="set-rules-text" class="desc-input"></textarea>
         </div>
       </div>
-
       <button class="btn btn-save" style="width:100%; padding:15px; border-radius:12px;" onclick="saveGeneralSettings()">設定を保存する</button>
     </div>
   </div>
 
   <button class="fab" id="fab-add" onclick="openModal()">＋</button>
 
-  <!-- 新規登録モーダル -->
+  <!-- 新規登録モーダル (拡張版) -->
   <div id="add-modal" class="modal">
     <div class="modal-content">
       <h3 style="margin-top:0">新メニュー登録</h3>
-      <div class="form-group"><input type="text" id="new-name" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box;" placeholder="商品名"></div>
-      <div class="form-group"><input type="number" id="new-price" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box;" placeholder="価格"></div>
-      <div class="form-group"><textarea id="new-description" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; box-sizing:border-box; height:80px;" placeholder="商品の説明"></textarea></div>
-      <div class="form-group">
-        <label style="font-size:12px; color:#888;">メニュー写真</label>
-        <input type="file" id="new-file" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;" accept="image/*">
+      <div class="form-group"><input type="text" id="new-name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;" placeholder="商品名（例: ハンバーグ弁当）"></div>
+      <div class="form-group"><textarea id="new-description" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;" placeholder="商品の説明"></textarea></div>
+      
+      <label class="label-small">💰 価格設定（空欄のオプションは登録されません）</label>
+      <div class="price-input-group" style="margin-bottom:8px;">
+        <span style="font-size:12px; color:#666; width:60px;">通常盛り</span>
+        ¥ <input type="number" id="new-price" class="price-input" placeholder="600">
       </div>
+      
+      <div class="option-price-grid">
+        <div style="display:flex; align-items:center; gap:5px;">
+          <span style="font-size:11px; color:#666;">大盛り</span>
+          <input type="number" id="new-price-large" class="price-input" style="font-size:14px; padding:3px;" placeholder="+¥">
+        </div>
+        <div style="display:flex; align-items:center; gap:5px;">
+          <span style="font-size:11px; color:#666;">おかずのみ</span>
+          <input type="number" id="new-price-side" class="price-input" style="font-size:14px; padding:3px;" placeholder="¥">
+        </div>
+        <div style="display:flex; align-items:center; gap:5px;">
+          <span style="font-size:11px; color:#666;">小盛り</span>
+          <input type="number" id="new-price-small" class="price-input" style="font-size:14px; padding:3px;" placeholder="¥">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:15px;">
+        <label class="label-small">📸 メニュー写真</label>
+        <input type="file" id="new-file" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:8px;" accept="image/*">
+      </div>
+
       <div style="display:flex; gap:10px; margin-top:20px;">
         <button class="btn btn-toggle" onclick="closeModal()">キャンセル</button>
-        <button class="btn btn-save" id="btn-add-submit" onclick="addNewMenu()">登録する</button>
+        <button class="btn btn-save" id="btn-add-submit" onclick="addNewMenu()">一括登録する</button>
       </div>
     </div>
   </div>
@@ -164,43 +173,30 @@
     let menuData = [];
 
     async function loadData() {
-      const menuList = document.getElementById('menu-list');
       try {
         const res = await fetch(`${BACKEND_URL}?action=getAdminMenu`);
         const data = await res.json();
-        
         menuData = data.menu || [];
-        
         if (data.settings) {
           document.getElementById('set-deadline').value = data.settings.deadline || "10:00";
           document.getElementById('set-rules-text').value = data.settings.rulesText || "";
         }
-        
         renderMenu();
-      } catch (e) {
-        menuList.innerHTML = '<div style="text-align:center; color:red; padding:20px;">接続に失敗しました</div>';
-      }
+      } catch (e) { document.getElementById('menu-list').innerHTML = 'エラー'; }
     }
 
     function switchTab(target) {
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      
       document.getElementById('tab-' + target).classList.add('active');
       document.getElementById('view-' + target).classList.add('active');
-      
       document.getElementById('fab-add').style.display = (target === 'menu') ? 'flex' : 'none';
     }
 
     function renderMenu() {
       const container = document.getElementById('menu-list');
-      if (menuData.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px; color:#888;">登録されているメニューはありません。</div>';
-        return;
-      }
-
       container.innerHTML = menuData.map((item, index) => {
-        const isSub = (item.optionName === '大盛り' || item.optionName === 'おかずのみ');
+        const isSub = (item.optionName === '大盛り' || item.optionName === 'おかずのみ' || item.optionName === '小盛り');
         return `
           <div class="card" id="card-${item.sku}">
             ${!isSub ? `
@@ -211,31 +207,20 @@
             ` : ''}
             <div class="card-body">
               <div class="title-row">
-                <div class="title">${item.name} <span style="font-size:13px; font-weight:normal; color:#888;">${item.optionName || ''}</span></div>
+                <div class="title">${item.name} <span style="font-size:12px; font-weight:normal; color:#888;">[${item.optionName || ''}]</span></div>
                 <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '表示中' : '非表示'}</span>
               </div>
-              
-              ${!isSub ? `
-                <div class="form-item">
-                  <label class="label-small">商品の説明</label>
-                  <textarea id="desc-${item.sku}" class="desc-input">${item.description || ''}</textarea>
-                </div>
-              ` : ''}
-
-              <div class="price-input-group">
-                <span class="label-small" style="margin:0">¥</span>
-                <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}">
+              ${!isSub ? `<textarea id="desc-${item.sku}" class="desc-input" placeholder="説明文">${item.description || ''}</textarea>` : ''}
+              <div class="price-input-group" style="margin-top:10px;">
+                ¥ <input type="number" id="p-${item.sku}" class="price-input" value="${item.price}">
               </div>
-
               <div class="action-group">
-                <button class="btn btn-save" onclick="updateItem('${item.sku}', ${item.isOnSale})">情報を更新</button>
-                <button class="btn btn-toggle" onclick="updateItem('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '非表示にする' : '表示する'}</button>
+                <button class="btn btn-save" onclick="updateItem('${item.sku}', ${item.isOnSale})">更新</button>
+                <button class="btn btn-toggle" onclick="updateItem('${item.sku}', ${!item.isOnSale})">${item.isOnSale ? '隠す' : '出す'}</button>
               </div>
-
               <div class="sort-controls">
                 <button class="btn-sort" onclick="moveOrder('${item.sku}', 'up')" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>↑</button>
                 <button class="btn-sort" onclick="moveOrder('${item.sku}', 'down')" ${index === menuData.length - 1 ? 'disabled style="opacity:0.3"' : ''}>↓</button>
-                <span style="font-size:11px; color:#bbb; flex:1; text-align:right;">並べ替え</span>
               </div>
             </div>
           </div>
@@ -247,72 +232,40 @@
       const price = document.getElementById('p-' + sku).value;
       const descEl = document.getElementById('desc-' + sku);
       const desc = descEl ? descEl.value : "";
-      
       const card = document.getElementById('card-' + sku);
       card.classList.add('busy');
-
       try {
         const response = await fetch(BACKEND_URL, {
           method: 'POST',
-          body: JSON.stringify({
-            action: 'updateMenu',
-            sku: sku,
-            price: parseInt(price, 10),
-            description: desc,
-            isOnSale: isOnSale,
-            imageData: img
-          })
+          body: JSON.stringify({ action: 'updateMenu', sku, price: parseInt(price), description: desc, isOnSale, imageData: img })
         });
-        const result = await response.json();
-        if (result.success) {
-          if (!img) alert("更新しました");
-          loadData();
-        } else {
-          alert("更新に失敗しました: " + result.message);
-        }
-      } catch (e) {
-        alert("エラーが発生しました");
-      } finally {
-        card.classList.remove('busy');
-      }
+        await loadData();
+      } catch (e) { alert("エラー"); } finally { card.classList.remove('busy'); }
     }
 
     async function moveOrder(sku, direction) {
       try {
-        const response = await fetch(BACKEND_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'moveMenu', sku: sku, direction: direction })
-        });
-        const result = await response.json();
-        if (result.success) loadData();
-      } catch (e) { alert("並べ替えエラー"); }
+        await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'moveMenu', sku, direction }) });
+        await loadData();
+      } catch (e) { alert("移動エラー"); }
     }
 
     async function saveGeneralSettings() {
       const deadline = document.getElementById('set-deadline').value;
       const rulesText = document.getElementById('set-rules-text').value;
-      
       try {
-        const response = await fetch(BACKEND_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'updateSettings',
-            deadline: deadline,
-            rulesText: rulesText
-          })
-        });
-        const result = await response.json();
-        if (result.success) alert("基本設定を保存しました");
-      } catch (e) { alert("保存エラー"); }
+        await fetch(BACKEND_URL, { method: 'POST', body: JSON.stringify({ action: 'updateSettings', deadline, rulesText }) });
+        alert("保存しました");
+      } catch (e) { alert("エラー"); }
     }
 
     function triggerSwap(sku) {
       const f = document.getElementById('swap-file');
       f.onchange = async () => {
-        if (!f.files[0]) return;
-        const b64 = await toBase64(f.files[0]);
-        updateItem(sku, true, b64);
-        f.value = "";
+        if (f.files[0]) {
+          const b64 = await toBase64(f.files[0]);
+          updateItem(sku, true, b64);
+        }
       };
       f.click();
     }
@@ -323,9 +276,13 @@
     async function addNewMenu() {
       const name = document.getElementById('new-name').value;
       const price = document.getElementById('new-price').value;
+      const priceLarge = document.getElementById('new-price-large').value;
+      const priceSide = document.getElementById('new-price-side').value;
+      const priceSmall = document.getElementById('new-price-small').value;
       const desc = document.getElementById('new-description').value;
       const file = document.getElementById('new-file').files[0];
-      if (!name || !price) return alert("商品名と価格を入力してください");
+      
+      if (!name || !price) return alert("商品名と通常価格は必須です");
 
       const btn = document.getElementById('btn-add-submit');
       btn.disabled = true; btn.textContent = "送信中...";
@@ -334,15 +291,20 @@
         const img = file ? await toBase64(file) : null;
         const res = await fetch(BACKEND_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'addMenu', name, price, description: desc, imageData: img })
+          body: JSON.stringify({ 
+            action: 'addMenu', 
+            name, 
+            price, 
+            priceLarge, 
+            priceSide, 
+            priceSmall, 
+            description: desc, 
+            imageData: img 
+          })
         });
-        const result = await res.json();
-        if(result.success) {
-          alert("登録完了しました");
-          closeModal();
-          loadData();
-        }
-      } catch (e) { alert("送信エラー"); } finally { btn.disabled = false; btn.textContent = "登録する"; }
+        closeModal();
+        loadData();
+      } catch (e) { alert("送信エラー"); } finally { btn.disabled = false; btn.textContent = "一括登録する"; }
     }
 
     const toBase64 = f => new Promise((res, rej) => {
