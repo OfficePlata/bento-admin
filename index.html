@@ -139,7 +139,9 @@
       try {
         const res = await fetch(`${BACKEND_URL}?action=getAdminMenu`);
         const data = await res.json();
-        menuData = data.menu || data; // バックエンドの形式に合わせて調整
+        
+        // バックエンドが settings を含むオブジェクトを返すことを想定
+        menuData = data.menu || data;
         
         // 設定データがあれば反映
         if (data.settings) {
@@ -187,10 +189,12 @@
                 <span class="status-badge ${item.isOnSale ? 'status-on' : 'status-off'}">${item.isOnSale ? '販売中' : '停止中'}</span>
               </div>
               
-              <div class="form-item">
-                <label class="label-small">説明文</label>
-                <textarea id="desc-${item.sku}" class="desc-input">${item.description || ''}</textarea>
-              </div>
+              ${!isSub ? `
+                <div class="form-item">
+                  <label class="label-small">説明文</label>
+                  <textarea id="desc-${item.sku}" class="desc-input" placeholder="商品の説明・こだわりを入力">${item.description || ''}</textarea>
+                </div>
+              ` : ''}
 
               <div class="price-section">
                 <span class="label-small" style="margin:0">価格</span>
@@ -214,7 +218,10 @@
 
     async function updateItem(sku, isOnSale, img = null) {
       const price = document.getElementById('p-' + sku).value;
-      const desc = document.getElementById('desc-' + sku).value;
+      // サブオプションの場合は説明文入力がないため考慮
+      const descEl = document.getElementById('desc-' + sku);
+      const desc = descEl ? descEl.value : "";
+      
       const card = document.getElementById('card-' + sku);
       card.classList.add('busy');
 
@@ -301,14 +308,19 @@
 
       try {
         const img = file ? await toBase64(file) : null;
-        await fetch(BACKEND_URL, {
+        const res = await fetch(BACKEND_URL, {
           method: 'POST',
           body: JSON.stringify({ action: 'addMenu', name, price, description: desc, imageData: img })
         });
-        alert("登録しました");
-        closeModal();
-        loadData();
-      } catch (e) { alert("エラー"); } finally { btn.disabled = false; btn.textContent = "登録"; }
+        const result = await res.json();
+        if(result.success) {
+          alert("登録しました");
+          closeModal();
+          loadData();
+        } else {
+          alert("登録エラー");
+        }
+      } catch (e) { alert("通信エラー"); } finally { btn.disabled = false; btn.textContent = "登録"; }
     }
 
     const toBase64 = f => new Promise((res, rej) => {
